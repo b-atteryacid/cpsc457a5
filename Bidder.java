@@ -20,17 +20,22 @@ class Bidder extends Thread {
 		while (auction.isActive ()) {
 			/* <<TODO>> */
 
-			if(isInterestedInItem(auction.getAuctionItems().get(i))) {
-				System.out.print("bidder "+id+" interested in "+auction.getAuctionItems().get(i)+"\n");
+			AuctionItem thisItem = auction.getAuctionItems().get(i);
+			if(isInterestedInItem(thisItem)) {
+				System.out.print("bidder "+id+" interested in "+thisItem+"\n");
 				try {
-				Thread.sleep(Bidder.THINK_TIME);
+					Thread.sleep(Bidder.THINK_TIME);
 				} catch (InterruptedException e){
 				}
 
-				auction.getAuctionItems().get(i).bid(this,auction.getAuctionItems().get(i).getPrice()+5);
+				Integer targetPrice = thisItem.getPrice()+5;
+				if(targetPrice <= this.funds) {
+					thisItem.bid(this,targetPrice);
+					this.funds -= targetPrice;
+				}
 
 			} else {
-			System.out.print("bidder "+id+" NOT interested in "+auction.getAuctionItems().get(i)+"\n");
+			System.out.print("bidder "+id+" NOT interested in "+thisItem+"\n");
 			}
 			i++;
 			if(i >= auction.getAuctionItems().size()) {
