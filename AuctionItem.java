@@ -1,12 +1,9 @@
-import java.util.concurrent.locks.Lock;
 
 class AuctionItem {
 
 	private Integer id;
 	private Integer price; 
 	private Bidder highest_bidder;
-	private volatile boolean priceWrite;
-	public Lock readmut = new Lock();
 
 	public AuctionItem (Integer id, Integer starting_price) {
 		this.id = id;
@@ -18,25 +15,20 @@ class AuctionItem {
 		return this.id;
 	}
 
-	public Bidder getHighestBidder () {
-		while(priceWrite){};
+	public synchronized Bidder getHighestBidder () {
 		return this.highest_bidder;	
 	}
 
-	public Integer getPrice () {
-	while(priceWrite){};
+	public synchronized Integer getPrice () {
 		return this.price;
 	}
 
 	public synchronized boolean bid(Bidder bidder, Integer offer) {
-		priceWrite = true;
 		if(offer < this.price) {
-			priceWrite = false;
 			return false;
 		}
 		this.highest_bidder = bidder;
 		this.price = offer;
-		priceWrite = false;
 		return true;
 	}
 };
