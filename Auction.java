@@ -4,7 +4,7 @@ import java.util.ArrayList;
 class Auction {
 
 	static final Integer MIN_ARGS = 2;
-	static final Integer DURATION = 6000; /* 60s */
+	static final Integer DURATION = 15000; /* 60s */
 
 
 	private ArrayList <AuctionItem> items; /* Items available in the auction. */
