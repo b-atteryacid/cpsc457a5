@@ -34,7 +34,7 @@ class Bidder extends Thread {
 				} else {
 					targetPrice = thisItem.getPrice()+5;
 				}
-				if(targetPrice <= this.funds) {
+				if(getTotalBids() + targetPrice <= this.funds) {
 					thisItem.bid(this,targetPrice);
 					System.out.print("bidder "+id+" just bid "+targetPrice+" on item "+id+", has "+this.funds+" left\n");
 					//this.funds -= targetPrice;
@@ -66,6 +66,7 @@ class Bidder extends Thread {
 	}
 
 	private Boolean isInterestedInItem (AuctionItem item) {
+		item.readmut.lock();
 		Boolean is_interested = true;
 			
 		/* Simulate evaluating the item. */
@@ -82,8 +83,19 @@ class Bidder extends Thread {
 		 * Included a fix for bidder 1 who would never bid on anything.
 	     */
 		is_interested &= this.id % item.getId () == 0 || this.id == 1; 
-		
+		item.readmut.unlock();
 		return is_interested;
+	}
+
+	private Integer getTotalBids() {
+		Integer total = 0;
+		for(int i = 0; i < auction.getAuctionItems().size(); i++) {
+			AuctionItem thisItem = auction.getAuctionItems().get(i);
+			if(thisItem.getHighestBidder() == this){
+				total += thisItem.getPrice(); //TODO RACE CONDITION HERE another process can bid in between these!
+			}
+		}
+		return total;
 	}
 
 };

@@ -1,3 +1,4 @@
+import java.util.concurrent.locks.Lock;
 
 class AuctionItem {
 
@@ -5,6 +6,7 @@ class AuctionItem {
 	private Integer price; 
 	private Bidder highest_bidder;
 	private volatile boolean priceWrite;
+	public Lock readmut = new Lock();
 
 	public AuctionItem (Integer id, Integer starting_price) {
 		this.id = id;
