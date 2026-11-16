@@ -22,4 +22,13 @@ class AuctionItem {
 	public Integer getPrice () {
 		return this.price;
 	}
+
+	public boolean bid(Bidder bidder, Integer offer) {
+		if(offer < this.price) {
+			return false;
+		}
+		this.highest_bidder = bidder;
+		this.price = offer;
+		return true;
+	}
 };
