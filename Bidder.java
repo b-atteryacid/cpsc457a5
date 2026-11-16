@@ -22,7 +22,7 @@ class Bidder extends Thread {
 
 			AuctionItem thisItem = auction.getAuctionItems().get(i);
 			if(isInterestedInItem(thisItem)) {
-				System.out.print("bidder "+id+" interested in "+thisItem+"\n");
+				System.out.print("bidder "+id+" interested in "+i+"\n");
 				try {
 					Thread.sleep(Bidder.THINK_TIME);
 				} catch (InterruptedException e){
@@ -36,15 +36,23 @@ class Bidder extends Thread {
 				}
 				if(targetPrice <= this.funds) {
 					thisItem.bid(this,targetPrice);
-					this.funds -= targetPrice;
+					System.out.print("bidder "+id+" just bid "+targetPrice+" on item "+id+", has "+this.funds+" left\n");
+					//this.funds -= targetPrice;
 				}
 
 			} else {
-			System.out.print("bidder "+id+" NOT interested in "+thisItem+"\n");
+				System.out.print("bidder "+id+" NOT interested in "+i+"\n");
 			}
 			i++;
 			if(i >= auction.getAuctionItems().size()) {
 				i = 0;
+			}
+		}
+
+		for(int j = 0; j < auction.getAuctionItems().size(); j++) {
+			AuctionItem thisItem = auction.getAuctionItems().get(j);
+			if(thisItem.getHighestBidder() == this) {
+				this.funds -= thisItem.getPrice();
 			}
 		}
 	}
