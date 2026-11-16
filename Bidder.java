@@ -28,7 +28,12 @@ class Bidder extends Thread {
 				} catch (InterruptedException e){
 				}
 
-				Integer targetPrice = thisItem.getPrice()+5;
+				Integer targetPrice;
+				if(thisItem.getHighestBidder() == null) {
+					targetPrice = thisItem.getPrice();
+				} else {
+					targetPrice = thisItem.getPrice()+5;
+				}
 				if(targetPrice <= this.funds) {
 					thisItem.bid(this,targetPrice);
 					this.funds -= targetPrice;
