@@ -15,8 +15,20 @@ class Bidder extends Thread {
 
 	@Override
 	public void run () {
+		int i = 0;
+
 		while (auction.isActive ()) {
 			/* <<TODO>> */
+
+			if(isInterestedInItem(auction.getAuctionItems().get(i))) {
+				System.out.print("bidder "+id+" interested in "+auction.getAuctionItems().get(i)+"\n");
+			} else {
+			System.out.print("bidder "+id+" NOT interested in "+auction.getAuctionItems().get(i)+"\n");
+			}
+			i++;
+			if(i >= auction.getAuctionItems().size()) {
+				i = 0;
+			}
 		}
 	}
 
