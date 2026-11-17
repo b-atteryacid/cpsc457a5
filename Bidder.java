@@ -6,13 +6,11 @@ class Bidder extends Thread {
 	private Integer id;
 	private Integer funds;
 	private Auction auction;
-//	private boolean finished;
 
 	public Bidder (Integer id, Integer starting_funds, Auction auction) {
 		this.id = id;
 		this.funds = starting_funds;
 		this.auction = auction;
-//		this.finished = false;
 	}
 
 	private Integer getTargetPrice(AuctionItem item) {
@@ -38,7 +36,7 @@ class Bidder extends Thread {
 
 				thisItem.writerEntry();
 				Integer targetPrice = getTargetPrice(thisItem);
-				if(targetPrice <= this.funds) {
+				if(targetPrice <= getFunds()) {
 					thisItem.bid(this,targetPrice);
 					System.out.print("bidder "+id+" just bid "+targetPrice+" on item "+i+" (id "+thisItem.getId()+")\n");
 				}
@@ -52,32 +50,21 @@ class Bidder extends Thread {
 				i = 0;
 			}
 		}
-		// this,finished = true;
-  //
-		// for(int j = 0; j < auction.)
-  //
-		// // nothing should still be bidding at this point, just readonly for items here
-		// for(int j = 0; j < auction.getAuctionItems().size(); j++) {
-		// 	AuctionItem thisItem = auction.getAuctionItems().get(j);
-		// 	if(thisItem.getHighestBidder() == this) {
-		// 		this.funds -= thisItem.getPrice();
-		// 	}
-		// }
 	}
 
 	public Integer getBidderId () {
 		return this.id;
 	}
 
-	public Integer getFunds () {
+	public synchronized Integer getFunds () {
 		return this.funds;
 	}
 
-	public void returnFunds(Integer funds) {
+	public synchronized void returnFunds(Integer funds) {
 		this.funds += funds;
 	}
 
-	public void allocateFunds(Integer funds) {
+	public synchronized void allocateFunds(Integer funds) {
 		this.funds -= funds;
 	}
 
@@ -99,22 +86,6 @@ class Bidder extends Thread {
 	     */
 		is_interested &= this.id % item.getId () == 0 || this.id == 1; 
 		return is_interested;
-	}
-
-	/*
-	@brief Get the total amount of funds that this Bidder has bid (and is winning).
-	Used to prevent a bidder from bidding on more than it can afford
-	*/
-	private Integer getTotalBids() {
-		Integer total = 0;
-		for(int i = 0; i < auction.getAuctionItems().size(); i++) {
-			AuctionItem thisItem = auction.getAuctionItems().get(i);
-			if(thisItem.getHighestBidder() == this){
-				total += thisItem.getPrice();
-
-			}
-		}
-		return total;
 	}
 
 };
