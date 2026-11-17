@@ -6,11 +6,13 @@ class Bidder extends Thread {
 	private Integer id;
 	private Integer funds;
 	private Auction auction;
+//	private boolean finished;
 
 	public Bidder (Integer id, Integer starting_funds, Auction auction) {
 		this.id = id;
 		this.funds = starting_funds;
 		this.auction = auction;
+//		this.finished = false;
 	}
 
 	private Integer getTargetPrice(AuctionItem item) {
@@ -27,41 +29,40 @@ class Bidder extends Thread {
 
 		while (auction.isActive ()) {
 			AuctionItem thisItem = auction.getAuctionItems().get(i);
-			thisItem.mutex.acquire();
-			if(isInterestedInItem(thisItem)) { // READ HIGHEST BIDDER from item so needs mutex
-				thisItem.mutex.release();
+			thisItem.readerEntry();
+			if(isInterestedInItem(thisItem)) {
+				thisItem.readerExit();
 				try {
 					Thread.sleep(Bidder.THINK_TIME);
 				} catch (InterruptedException e){}
 
-				thisItem.mutex.acquire();
+				thisItem.writerEntry();
 				Integer targetPrice = getTargetPrice(thisItem);
-				if(getTotalBids() + targetPrice <= this.funds) { // RACE CONDITION BETWEEN BIDDERS because we are checking items other than this one in gettotalbids! NEEDS BIDDER mutex? maybe
+				if(targetPrice <= this.funds) {
 					thisItem.bid(this,targetPrice);
 					System.out.print("bidder "+id+" just bid "+targetPrice+" on item "+i+" (id "+thisItem.getId()+")\n");
 				}
-				thisItem.mutex.release();
+				thisItem.writerExit();
 
 			} else {
-				thisItem.mutex.release();
+				thisItem.readerExit();
 			}
 			i++;
 			if(i >= auction.getAuctionItems().size()) {
 				i = 0;
 			}
 		}
-		try {
-		Thread.sleep(Bidder.THINK_TIME*2); // possible for other threads to still be bidding right after this loop exits up until 2x think time
-		}
-		catch (InterruptedException e) {}
-
-		// nothing should still be bidding at this point, just readonly for items here
-		for(int j = 0; j < auction.getAuctionItems().size(); j++) {
-			AuctionItem thisItem = auction.getAuctionItems().get(j);
-			if(thisItem.getHighestBidder() == this) {
-				this.funds -= thisItem.getPrice();
-			}
-		}
+		// this,finished = true;
+  //
+		// for(int j = 0; j < auction.)
+  //
+		// // nothing should still be bidding at this point, just readonly for items here
+		// for(int j = 0; j < auction.getAuctionItems().size(); j++) {
+		// 	AuctionItem thisItem = auction.getAuctionItems().get(j);
+		// 	if(thisItem.getHighestBidder() == this) {
+		// 		this.funds -= thisItem.getPrice();
+		// 	}
+		// }
 	}
 
 	public Integer getBidderId () {
@@ -70,6 +71,14 @@ class Bidder extends Thread {
 
 	public Integer getFunds () {
 		return this.funds;
+	}
+
+	public void returnFunds(Integer funds) {
+		this.funds += funds;
+	}
+
+	public void allocateFunds(Integer funds) {
+		this.funds -= funds;
 	}
 
 	private Boolean isInterestedInItem (AuctionItem item) {
