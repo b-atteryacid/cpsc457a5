@@ -4,6 +4,9 @@ class AuctionItem {
 	private Integer id;
 	private Integer price; 
 	private Bidder highest_bidder;
+
+	// reader-favored semaphore for this item
+	// caller is responsible for getting these
 	public Semaphore mutex;
 	public Semaphore CS;
 	private int readers;
@@ -13,6 +16,7 @@ class AuctionItem {
 		this.id = id;
 		this.price = starting_price;
 		this.highest_bidder = null;
+
 		this.readers = 0;
 		mutex = new Semaphore(1);
 		CS = new Semaphore(1);
@@ -30,10 +34,12 @@ class AuctionItem {
 		return this.price;
 	}
 
+	// bid on this item. returns unused funds to the previous highest bidder and gets the new bidder to allocate them.
 	public boolean bid(Bidder bidder, Integer offer) {
 		if(offer < this.price) {
 			return false;
 		}
+
 		if(this.highest_bidder != null) {
 			this.highest_bidder.returnFunds(this.price);
 		}
