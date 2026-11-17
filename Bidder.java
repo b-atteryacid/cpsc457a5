@@ -13,43 +13,49 @@ class Bidder extends Thread {
 		this.auction = auction;
 	}
 
+	private Integer getTargetPrice(AuctionItem item) {
+		if(item.getHighestBidder() == null) {
+			return item.getPrice();
+		} else {
+			return item.getPrice() + 5;
+		}
+	}
+
 	@Override
 	public void run () {
 		int i = 0;
 
 		while (auction.isActive ()) {
-
 			AuctionItem thisItem = auction.getAuctionItems().get(i);
-			if(isInterestedInItem(thisItem)) {
-				//System.out.print("bidder "+id+" interested in "+i+"\n");
+			thisItem.mutex.acquire();
+			if(isInterestedInItem(thisItem)) { // READ HIGHEST BIDDER from item so needs mutex
+				thisItem.mutex.release();
 				try {
 					Thread.sleep(Bidder.THINK_TIME);
-				} catch (InterruptedException e){
+				} catch (InterruptedException e){}
+
+				thisItem.mutex.acquire();
+				Integer targetPrice = getTargetPrice(thisItem);
+				if(getTotalBids() + targetPrice <= this.funds) { // RACE CONDITION BETWEEN BIDDERS because we are checking items other than this one in gettotalbids! NEEDS BIDDER mutex? maybe
+					thisItem.bid(this,targetPrice);
+					System.out.print("bidder "+id+" just bid "+targetPrice+" on item "+i+" (id "+thisItem.getId()+")\n");
 				}
-
-				Integer targetPrice;
-				synchronized(thisItem) {
-					if(thisItem.getHighestBidder() == null) {
-						targetPrice = thisItem.getPrice();
-					} else {
-						targetPrice = thisItem.getPrice()+5;
-					}
-					}
-					if(getTotalBids() + targetPrice <= this.funds) {
-						thisItem.bid(this,targetPrice);
-						System.out.print("bidder "+id+" just bid "+targetPrice+" on item "+i+" (id "+thisItem.getId()+")\n");
-					}
-
+				thisItem.mutex.release();
 
 			} else {
-				//System.out.print("bidder "+id+" NOT interested in "+i+"\n");
+				thisItem.mutex.release();
 			}
 			i++;
 			if(i >= auction.getAuctionItems().size()) {
 				i = 0;
 			}
 		}
+		try {
+		Thread.sleep(Bidder.THINK_TIME*2); // possible for other threads to still be bidding right after this loop exits up until 2x think time
+		}
+		catch (InterruptedException e) {}
 
+		// nothing should still be bidding at this point, just readonly for items here
 		for(int j = 0; j < auction.getAuctionItems().size(); j++) {
 			AuctionItem thisItem = auction.getAuctionItems().get(j);
 			if(thisItem.getHighestBidder() == this) {
@@ -90,14 +96,13 @@ class Bidder extends Thread {
 	@brief Get the total amount of funds that this Bidder has bid (and is winning).
 	Used to prevent a bidder from bidding on more than it can afford
 	*/
-	private synchronized Integer getTotalBids() {
+	private Integer getTotalBids() {
 		Integer total = 0;
 		for(int i = 0; i < auction.getAuctionItems().size(); i++) {
 			AuctionItem thisItem = auction.getAuctionItems().get(i);
-			synchronized(thisItem) {
 			if(thisItem.getHighestBidder() == this){
-				total += thisItem.getPrice(); // race condition? use mutex?
-			}
+				total += thisItem.getPrice();
+
 			}
 		}
 		return total;
