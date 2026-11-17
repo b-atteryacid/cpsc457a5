@@ -2,7 +2,7 @@
 import java.lang.Thread;
 
 class Bidder extends Thread {
-	static final Integer THINK_TIME = 20;
+	static final Integer THINK_TIME = 500;
 	private Integer id;
 	private Integer funds;
 	private Auction auction;
